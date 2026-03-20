@@ -1,0 +1,230 @@
+version: 2
+
+models:
+  - name: stg_users
+    description: "Staging model for user accounts"
+    columns:
+      - name: user_id
+        description: "Primary key for users"
+        tests:
+          - unique
+          - not_null
+      - name: email
+        description: "User email address"
+      - name: created_at
+        description: "Timestamp when user was created"
+      - name: updated_at
+        description: "Timestamp when user was last updated"
+
+  - name: stg_workspaces
+    description: "Staging model for workspaces with subscription and credit information"
+    columns:
+      - name: workspace_id
+        description: "Primary key for workspaces"
+        tests:
+          - unique
+          - not_null
+      - name: user_id
+        description: "Foreign key to users"
+      - name: plan
+        description: "Current plan name (STARTER, BASIC/CREATOR, PRO, CUSTOM)"
+      - name: subscription_id
+        description: "Stripe subscription ID"
+      - name: stripe_end_current_period
+        description: "End date of current subscription period"
+      - name: total_credits
+        description: "Total credits available in current period"
+      - name: used_credits
+        description: "Credits used in current period"
+      - name: created_at
+        description: "Timestamp when workspace was created"
+      - name: updated_at
+        description: "Timestamp when workspace was last updated"
+
+  - name: stg_plans
+    description: "Staging model for subscription plans"
+    columns:
+      - name: plan_id
+        description: "Primary key for plans"
+        tests:
+          - unique
+          - not_null
+      - name: plan_name
+        description: "Plan name"
+      - name: plan_type
+        description: "Plan type"
+      - name: is_pro
+        description: "Boolean indicating if this is a pro plan"
+      - name: plan_credits
+        description: "Number of credits included in the plan"
+      - name: plan_price
+        description: "Plan price"
+      - name: plan_interval
+        description: "Billing interval (month or year)"
+
+  - name: stg_workspaces_ab_tests
+    description: "Staging model for workspace AB test assignments"
+    columns:
+      - name: workspace_ab_test_id
+        description: "Primary key"
+        tests:
+          - unique
+          - not_null
+      - name: workspace_id
+        description: "Foreign key to workspaces"
+      - name: ab_test_name
+        description: "Name of the AB test"
+      - name: cohort
+        description: "Cohort assignment (A or B)"
+      - name: created_at
+        description: "Timestamp when association was created"
+
+  - name: stg_stripe_subscription_histories
+    description: "Staging model for subscription history"
+    columns:
+      - name: subscription_history_id
+        description: "Primary key"
+        tests:
+          - unique
+          - not_null
+      - name: workspace_id
+        description: "Foreign key to workspaces"
+      - name: plan_id
+        description: "Foreign key to plans"
+      - name: subscription_id
+        description: "Stripe subscription ID"
+      - name: billing_interval
+        description: "Billing interval (month or year)"
+      - name: billing_period
+        description: "Number of intervals (usually 1)"
+      - name: start_date
+        description: "Start date of this subscription"
+      - name: end_date
+        description: "End date of this subscription (null if current)"
+      - name: created_at
+        description: "Timestamp when record was created"
+
+  - name: stg_stripe_payment_histories
+    description: "Staging model for payment history"
+    columns:
+      - name: payment_history_id
+        description: "Primary key"
+        tests:
+          - unique
+          - not_null
+      - name: workspace_id
+        description: "Foreign key to workspaces"
+      - name: subscription_history_id
+        description: "Foreign key to subscription histories"
+      - name: amount
+        description: "Payment amount"
+      - name: payment_type
+        description: "Payment type (plan or additional credits)"
+      - name: payment_status
+        description: "Payment status"
+      - name: payment_date
+        description: "Date of payment"
+      - name: created_at
+        description: "Timestamp when record was created"
+
+  - name: stg_credits_consumption_events
+    description: "Staging model for credits consumption and refund events"
+    columns:
+      - name: credit_event_id
+        description: "Primary key"
+        tests:
+          - unique
+          - not_null
+      - name: workspace_id
+        description: "Foreign key to workspaces"
+      - name: credits
+        description: "Number of credits (positive for consumption, negative for refunds)"
+      - name: event_type
+        description: "Event type"
+      - name: created_at
+        description: "Timestamp when event occurred"
+
+  - name: stg_videos
+    description: "Staging model for video generations (Arcads 1.0)"
+    columns:
+      - name: video_id
+        description: "Primary key"
+        tests:
+          - unique
+          - not_null
+      - name: workspace_id
+        description: "Foreign key to workspaces"
+      - name: created_at
+        description: "Timestamp when video was created"
+      - name: status
+        description: "Video status"
+
+  - name: stg_video_assets
+    description: "Staging model for all other generations (images, videos)"
+    columns:
+      - name: video_asset_id
+        description: "Primary key"
+        tests:
+          - unique
+          - not_null
+      - name: workspace_id
+        description: "Foreign key to workspaces"
+      - name: asset_type
+        description: "Asset type"
+      - name: created_at
+        description: "Timestamp when asset was created"
+      - name: status
+        description: "Asset status"
+
+  - name: stg_costs
+    description: "Staging model for generation costs"
+    columns:
+      - name: cost_id
+        description: "Primary key"
+        tests:
+          - unique
+          - not_null
+      - name: workspace_id
+        description: "Foreign key to workspaces"
+      - name: video_id
+        description: "Foreign key to videos (nullable)"
+      - name: video_asset_id
+        description: "Foreign key to video assets (nullable)"
+      - name: cost
+        description: "Cost amount"
+      - name: created_at
+        description: "Timestamp when cost was recorded"
+
+  - name: stg_meta_ads
+    description: "Staging model for Meta (Facebook) advertising data"
+    columns:
+      - name: ad_date
+        description: "Date of the advertising metrics"
+        tests:
+          - not_null
+      - name: spend_eur
+        description: "Total spend in euros"
+      - name: purchases
+        description: "Number of purchases attributed to ads"
+      - name: roas
+        description: "Return on Ad Spend"
+      - name: cost_per_purchase_eur
+        description: "Cost per purchase in euros"
+      - name: purchase_value_eur
+        description: "Total purchase value in euros"
+      - name: sign_ups
+        description: "Number of sign-ups attributed to ads"
+      - name: cost_per_sign_up_eur
+        description: "Cost per sign-up in euros"
+      - name: link_clicks
+        description: "Number of link clicks"
+      - name: cpc_eur
+        description: "Cost per click in euros"
+      - name: cpm_eur
+        description: "Cost per thousand impressions in euros"
+      - name: impressions
+        description: "Number of ad impressions"
+      - name: ctr_percent
+        description: "Click-through rate as percentage"
+      - name: conversion_rate_percent
+        description: "Conversion rate (purchases/sign-ups) as percentage"

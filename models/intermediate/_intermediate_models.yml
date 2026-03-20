@@ -1,0 +1,76 @@
+version: 2
+
+models:
+  - name: int_first_subscriptions
+    description: "Intermediate model identifying first subscription for each workspace with AB test information"
+    columns:
+      - name: workspace_id
+        description: "Primary key - workspace identifier"
+        tests:
+          - unique
+          - not_null
+      - name: ab_test_name
+        description: "Name of the AB test the workspace was assigned to"
+      - name: cohort
+        description: "AB test cohort (A or B)"
+      - name: ab_test_assigned_at
+        description: "Timestamp when workspace was assigned to AB test"
+      - name: subscription_history_id
+        description: "ID of the first subscription"
+      - name: plan_id
+        description: "Plan ID of first subscription"
+      - name: plan_name
+        description: "Plan name of first subscription"
+      - name: billing_interval
+        description: "Billing interval (month or year)"
+      - name: subscription_start_date
+        description: "Start date of first subscription"
+      - name: first_payment_amount
+        description: "Amount of first payment"
+      - name: first_payment_date
+        description: "Date of first payment"
+      - name: is_during_test_period
+        description: "Boolean indicating if subscription occurred during the AB test period"
+
+  - name: int_workspace_metrics
+    description: "Intermediate model with aggregated metrics per workspace"
+    columns:
+      - name: workspace_id
+        description: "Primary key - workspace identifier"
+        tests:
+          - unique
+          - not_null
+      - name: user_id
+        description: "User who owns the workspace"
+      - name: plan
+        description: "Current plan"
+      - name: total_payments
+        description: "Total number of successful payments"
+      - name: total_plan_revenue
+        description: "Total revenue from plan subscriptions"
+      - name: total_additional_credits_revenue
+        description: "Total revenue from additional credit purchases"
+      - name: total_revenue
+        description: "Total revenue (plan + additional credits)"
+      - name: first_payment_date
+        description: "Date of first payment"
+      - name: last_payment_date
+        description: "Date of most recent payment"
+      - name: total_credits_consumed
+        description: "Total credits consumed"
+      - name: total_credits_refunded
+        description: "Total credits refunded"
+      - name: total_videos_v1
+        description: "Total videos generated (Arcads 1.0)"
+      - name: total_assets
+        description: "Total assets generated (all other types)"
+      - name: total_generations
+        description: "Total content generations (videos + assets)"
+      - name: total_generation_cost
+        description: "Total cost of all generations"
+      - name: has_revenue
+        description: "Boolean indicating if workspace has any revenue"
+      - name: has_consumed_credits
+        description: "Boolean indicating if workspace has consumed credits"
+      - name: has_generated_content
+        description: "Boolean indicating if workspace has generated content"

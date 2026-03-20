@@ -1,0 +1,199 @@
+version: 2
+
+sources:
+  - name: arcads_product
+    description: "Product database tables from Arcads application"
+    database: data-analysis-test
+    schema: public
+    tables:
+      - name: Users
+        description: "User accounts in the Arcads platform"
+        columns:
+          - name: id
+            description: "Primary key for users"
+          - name: email
+            description: "User email address"
+          - name: createdAt
+            description: "Timestamp when user was created"
+          - name: updatedAt
+            description: "Timestamp when user was last updated"
+
+      - name: Workspaces
+        description: "Workspaces associated with users, contains subscription and credit information"
+        columns:
+          - name: id
+            description: "Primary key for workspaces"
+          - name: userId
+            description: "Foreign key to Users table"
+          - name: plan
+            description: "Current plan name (STARTER, BASIC/CREATOR, PRO, CUSTOM)"
+          - name: subscriptionId
+            description: "Stripe subscription ID"
+          - name: stripeEndCurrentPeriod
+            description: "End date of current subscription period"
+          - name: totalCredits
+            description: "Total credits available in current period"
+          - name: usedCredits
+            description: "Credits used in current period"
+          - name: createdAt
+            description: "Timestamp when workspace was created"
+          - name: updatedAt
+            description: "Timestamp when workspace was last updated"
+
+      - name: Accesses
+        description: "User access to workspaces (for invited users)"
+        columns:
+          - name: id
+            description: "Primary key for accesses"
+          - name: userId
+            description: "Foreign key to Users table"
+          - name: workspaceId
+            description: "Foreign key to Workspaces table"
+          - name: role
+            description: "User role in the workspace"
+          - name: createdAt
+            description: "Timestamp when access was granted"
+
+      - name: Plans
+        description: "Available subscription plans"
+        columns:
+          - name: id
+            description: "Primary key for plans"
+          - name: name
+            description: "Plan name"
+          - name: type
+            description: "Plan type"
+          - name: isPro
+            description: "Boolean indicating if this is a pro plan"
+          - name: credits
+            description: "Number of credits included in the plan"
+          - name: price
+            description: "Plan price"
+          - name: interval
+            description: "Billing interval (month or year)"
+
+      - name: WorkspacesABTests
+        description: "Association between workspaces and AB tests"
+        columns:
+          - name: id
+            description: "Primary key"
+          - name: workspaceId
+            description: "Foreign key to Workspaces table"
+          - name: feature
+            description: "Name of the AB test feature"
+          - name: cohort
+            description: "Cohort assignment (A or B)"
+          - name: createdAt
+            description: "Timestamp when association was created"
+
+      - name: UsersABTests
+        description: "Association between users and AB tests"
+        columns:
+          - name: id
+            description: "Primary key"
+          - name: userId
+            description: "Foreign key to Users table"
+          - name: abTestName
+            description: "Name of the AB test"
+          - name: cohort
+            description: "Cohort assignment (A or B)"
+          - name: createdAt
+            description: "Timestamp when association was created"
+
+      - name: StripeSubscriptionHistories
+        description: "History of all subscription changes"
+        columns:
+          - name: id
+            description: "Primary key"
+          - name: workspaceId
+            description: "Foreign key to Workspaces table"
+          - name: planId
+            description: "Foreign key to Plans table"
+          - name: subscriptionId
+            description: "Stripe subscription ID"
+          - name: interval
+            description: "Billing interval (month or year)"
+          - name: period
+            description: "Number of intervals (usually 1)"
+          - name: startDate
+            description: "Start date of this subscription"
+          - name: endDate
+            description: "End date of this subscription (null if current)"
+          - name: createdAt
+            description: "Timestamp when record was created"
+
+      - name: StripePaymentHistories
+        description: "History of all payments"
+        columns:
+          - name: id
+            description: "Primary key"
+          - name: workspaceId
+            description: "Foreign key to Workspaces table"
+          - name: subscriptionHistoryId
+            description: "Foreign key to StripeSubscriptionHistories table"
+          - name: amount
+            description: "Payment amount"
+          - name: type
+            description: "Payment type (plan or additional credits)"
+          - name: status
+            description: "Payment status"
+          - name: paymentDate
+            description: "Date of payment"
+          - name: createdAt
+            description: "Timestamp when record was created"
+
+      - name: CreditsConsumptionEvents
+        description: "Credits consumption and refund events"
+        columns:
+          - name: id
+            description: "Primary key"
+          - name: workspaceId
+            description: "Foreign key to Workspaces table"
+          - name: credits
+            description: "Number of credits (positive for consumption, negative for refunds)"
+          - name: type
+            description: "Event type"
+          - name: createdAt
+            description: "Timestamp when event occurred"
+
+      - name: Videos
+        description: "Video generations (Arcads 1.0)"
+        columns:
+          - name: id
+            description: "Primary key"
+          - name: workspaceId
+            description: "Foreign key to Workspaces table"
+          - name: createdAt
+            description: "Timestamp when video was created"
+          - name: status
+            description: "Video status"
+
+      - name: VideoAssets
+        description: "All other generations (images, videos)"
+        columns:
+          - name: id
+            description: "Primary key"
+          - name: workspaceId
+            description: "Foreign key to Workspaces table"
+          - name: type
+            description: "Asset type"
+          - name: createdAt
+            description: "Timestamp when asset was created"
+          - name: status
+            description: "Asset status"
+
+      - name: Costs
+        description: "Cost of each generation"
+        columns:
+          - name: id
+            description: "Primary key"
+          - name: workspaceId
+            description: "Foreign key to Workspaces table"
+          - name: videoId
+            description: "Foreign key to Videos table (nullable)"
+          - name: videoAssetId
+            description: "Foreign key to VideoAssets table (nullable)"
+          - name: cost
+            description: "Cost amount"
+          - name: createdAt
+            description: "Timestamp when cost was recorded"
