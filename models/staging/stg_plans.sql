@@ -6,6 +6,6 @@
 
 select
     type as plan_type,
-    "isPro" as is_pro,
-    credits as plan_credits
+    credits as plan_credits,
+    "isPro" as is_pro
 from {{ source('arcads_product', 'Plans') }}

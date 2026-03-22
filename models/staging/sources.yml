@@ -13,6 +13,10 @@ sources:
             description: "Primary key for users"
           - name: email
             description: "User email address"
+          - name: firstName
+            description: "User first name"
+          - name: lastName
+            description: "User last name"
           - name: createdAt
             description: "Timestamp when user was created"
           - name: updatedAt
@@ -27,18 +31,12 @@ sources:
             description: "Foreign key to Users table"
           - name: plan
             description: "Current plan name (STARTER, BASIC/CREATOR, PRO, CUSTOM)"
-          - name: subscriptionId
-            description: "Stripe subscription ID"
           - name: stripeEndCurrentPeriod
             description: "End date of current subscription period"
           - name: totalCredits
             description: "Total credits available in current period"
           - name: usedCredits
             description: "Credits used in current period"
-          - name: createdAt
-            description: "Timestamp when workspace was created"
-          - name: updatedAt
-            description: "Timestamp when workspace was last updated"
 
       - name: Accesses
         description: "User access to workspaces (for invited users)"
@@ -49,28 +47,16 @@ sources:
             description: "Foreign key to Users table"
           - name: workspaceId
             description: "Foreign key to Workspaces table"
-          - name: role
-            description: "User role in the workspace"
-          - name: createdAt
-            description: "Timestamp when access was granted"
 
       - name: Plans
         description: "Available subscription plans"
         columns:
-          - name: id
-            description: "Primary key for plans"
-          - name: name
-            description: "Plan name"
           - name: type
-            description: "Plan type"
-          - name: isPro
-            description: "Boolean indicating if this is a pro plan"
+            description: "Plan type (used as primary key)"
           - name: credits
             description: "Number of credits included in the plan"
-          - name: price
-            description: "Plan price"
-          - name: interval
-            description: "Billing interval (month or year)"
+          - name: isPro
+            description: "Boolean indicating if this is a pro plan"
 
       - name: WorkspacesABTests
         description: "Association between workspaces and AB tests"
@@ -83,8 +69,6 @@ sources:
             description: "Name of the AB test feature"
           - name: cohort
             description: "Cohort assignment (A or B)"
-          - name: createdAt
-            description: "Timestamp when association was created"
 
       - name: UsersABTests
         description: "Association between users and AB tests"
@@ -93,12 +77,10 @@ sources:
             description: "Primary key"
           - name: userId
             description: "Foreign key to Users table"
-          - name: abTestName
-            description: "Name of the AB test"
+          - name: feature
+            description: "Name of the AB test feature"
           - name: cohort
             description: "Cohort assignment (A or B)"
-          - name: createdAt
-            description: "Timestamp when association was created"
 
       - name: StripeSubscriptionHistories
         description: "History of all subscription changes"
@@ -107,40 +89,42 @@ sources:
             description: "Primary key"
           - name: workspaceId
             description: "Foreign key to Workspaces table"
-          - name: planId
-            description: "Foreign key to Plans table"
-          - name: subscriptionId
-            description: "Stripe subscription ID"
+          - name: plan
+            description: "Plan name"
           - name: interval
             description: "Billing interval (month or year)"
-          - name: period
+          - name: intervalCount
             description: "Number of intervals (usually 1)"
           - name: startDate
             description: "Start date of this subscription"
           - name: endDate
             description: "End date of this subscription (null if current)"
-          - name: createdAt
-            description: "Timestamp when record was created"
 
       - name: StripePaymentHistories
         description: "History of all payments"
         columns:
           - name: id
             description: "Primary key"
-          - name: workspaceId
-            description: "Foreign key to Workspaces table"
-          - name: subscriptionHistoryId
+          - name: stripeSubscriptionHistoryId
             description: "Foreign key to StripeSubscriptionHistories table"
-          - name: amount
-            description: "Payment amount"
           - name: type
             description: "Payment type (plan or additional credits)"
-          - name: status
-            description: "Payment status"
-          - name: paymentDate
+          - name: date
             description: "Date of payment"
-          - name: createdAt
-            description: "Timestamp when record was created"
+          - name: currency
+            description: "Payment currency"
+          - name: currencyAmount
+            description: "Payment amount in original currency"
+          - name: eurAmount
+            description: "Payment amount in EUR"
+          - name: credits
+            description: "Credits purchased"
+          - name: additionalCredits
+            description: "Additional credits included"
+          - name: refundedAmount
+            description: "Refunded amount in original currency"
+          - name: eurRefundedAmount
+            description: "Refunded amount in EUR"
 
       - name: CreditsConsumptionEvents
         description: "Credits consumption and refund events"
@@ -149,23 +133,25 @@ sources:
             description: "Primary key"
           - name: workspaceId
             description: "Foreign key to Workspaces table"
-          - name: credits
-            description: "Number of credits (positive for consumption, negative for refunds)"
-          - name: type
-            description: "Event type"
-          - name: createdAt
+          - name: userId
+            description: "Foreign key to Users table"
+          - name: feature
+            description: "Feature that consumed credits"
+          - name: occurredAt
             description: "Timestamp when event occurred"
+          - name: generations
+            description: "Number of generations"
+          - name: creditsCost
+            description: "Credits cost"
 
       - name: Videos
         description: "Video generations (Arcads 1.0)"
         columns:
           - name: id
             description: "Primary key"
-          - name: workspaceId
-            description: "Foreign key to Workspaces table"
-          - name: createdAt
-            description: "Timestamp when video was created"
-          - name: status
+          - name: scriptId
+            description: "Foreign key to Scripts table"
+          - name: videoStatus
             description: "Video status"
 
       - name: VideoAssets
@@ -173,27 +159,81 @@ sources:
         columns:
           - name: id
             description: "Primary key"
-          - name: workspaceId
-            description: "Foreign key to Workspaces table"
           - name: type
             description: "Asset type"
-          - name: createdAt
-            description: "Timestamp when asset was created"
           - name: status
             description: "Asset status"
+          - name: productId
+            description: "Foreign key to Products table"
 
       - name: Costs
         description: "Cost of each generation"
         columns:
           - name: id
             description: "Primary key"
+          - name: type
+            description: "Cost type"
+          - name: entityId
+            description: "Foreign key to entity (video or asset)"
           - name: workspaceId
             description: "Foreign key to Workspaces table"
-          - name: videoId
-            description: "Foreign key to Videos table (nullable)"
-          - name: videoAssetId
-            description: "Foreign key to VideoAssets table (nullable)"
-          - name: cost
-            description: "Cost amount"
+          - name: value
+            description: "Cost value"
+
+      - name: Scripts
+        description: "Video scripts created by users"
+        columns:
+          - name: id
+            description: "Primary key"
+          - name: name
+            description: "Script name"
+          - name: projectId
+            description: "Foreign key to Projects table"
+
+      - name: Projects
+        description: "User projects for organizing videos"
+        columns:
+          - name: id
+            description: "Primary key"
+          - name: name
+            description: "Project name"
+          - name: folderId
+            description: "Foreign key to Folders table"
+
+      - name: Folders
+        description: "User folders for organizing projects"
+        columns:
+          - name: id
+            description: "Primary key"
+          - name: name
+            description: "Folder name"
+          - name: productId
+            description: "Foreign key to Products table"
+
+      - name: Products
+        description: "User products for video generation"
+        columns:
+          - name: id
+            description: "Primary key"
+          - name: name
+            description: "Product name"
+          - name: workspaceId
+            description: "Foreign key to Workspaces table"
+
+      - name: UsedCredits
+        description: "Tracks credits used per script and workspace"
+        columns:
+          - name: id
+            description: "Primary key"
+          - name: scriptId
+            description: "Foreign key to Scripts table"
+          - name: workspaceId
+            description: "Foreign key to Workspaces table"
+          - name: usedCredits
+            description: "Credits used"
+          - name: monthlyWorkspaceUsedCredits
+            description: "Monthly workspace used credits"
           - name: createdAt
-            description: "Timestamp when cost was recorded"
+            description: "Timestamp when record was created"
+          - name: updatedAt
+            description: "Timestamp when record was updated"

@@ -9,6 +9,8 @@ models:
         tests:
           - unique
           - not_null
+      - name: workspace_ab_test_id
+        description: "ID of the workspace AB test assignment"
       - name: ab_test_name
         description: "Name of the AB test the workspace was assigned to"
       - name: cohort
@@ -18,15 +20,25 @@ models:
       - name: subscription_history_id
         description: "ID of the first subscription"
       - name: plan_id
-        description: "Plan ID of first subscription"
+        description: "Plan ID of first subscription (same as plan name)"
       - name: plan_name
-        description: "Plan name of first subscription"
+        description: "Plan name of first subscription (STARTER, BASIC, PRO)"
+      - name: plan_type
+        description: "Plan type from plans dimension"
+      - name: plan_credits
+        description: "Number of credits included in the plan"
+      - name: is_pro
+        description: "Boolean indicating if this is a pro plan"
       - name: billing_interval
         description: "Billing interval (month or year)"
+      - name: billing_interval_count
+        description: "Number of billing intervals"
       - name: subscription_start_date
         description: "Start date of first subscription"
+      - name: first_subscription_at
+        description: "Timestamp of first subscription"
       - name: first_payment_amount
-        description: "Amount of first payment"
+        description: "Amount of first payment in EUR"
       - name: first_payment_date
         description: "Date of first payment"
       - name: is_during_test_period

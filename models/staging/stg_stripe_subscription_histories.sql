@@ -6,12 +6,11 @@
 
 select
     id as subscription_history_id,
-    "workspaceId" as workspace_id,
+    "workspaceId"::text as workspace_id,
     plan,
-    "subscriptionId" as subscription_id,
+    "startDate" as start_date,
+    "endDate" as end_date,
     interval as billing_interval,
     "intervalCount" as billing_interval_count,
-    "startDate"::date as start_date,
-    "endDate"::date as end_date,
-    "createdAt"::date as created_at
+    "createdAt" as created_at
 from {{ source('arcads_product', 'StripeSubscriptionHistories') }}

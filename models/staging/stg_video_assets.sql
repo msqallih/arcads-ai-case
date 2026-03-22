@@ -7,6 +7,6 @@
 select
     id as video_asset_id,
     type as asset_type,
-    "productId" as product_id,
-    status
+    status,
+    "productId" as product_id
 from {{ source('arcads_product', 'VideoAssets') }}

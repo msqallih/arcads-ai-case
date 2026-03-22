@@ -5,11 +5,8 @@
 }}
 
 select
-    id as credit_event_id,
-    "workspaceId" as workspace_id,
-    "userId" as user_id,
-    feature as credit_event_feature,
-    "occurredAt"::date as occured_at,
-    generations,
-    "creditsCost" as credit_cost
+    id as event_id,
+    "workspaceId"::text as workspace_id,
+    "creditsCost" as credit_cost,
+    "createdAt" as consumed_at
 from {{ source('arcads_product', 'CreditsConsumptionEvents') }}
