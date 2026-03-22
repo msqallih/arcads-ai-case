@@ -331,6 +331,15 @@ credit_aggregations AS (
     GROUP BY workspace_id
 ),
 
+-- Actual generation costs from Costs table
+cost_aggregations AS (
+    SELECT
+        workspace_id,
+        SUM(value) AS total_generation_cost
+    FROM stg_costs
+    GROUP BY workspace_id
+),
+
 -- Video and asset aggregations (joined through products)
 video_aggregations AS (
     SELECT
@@ -346,8 +355,7 @@ video_aggregations AS (
     GROUP BY p.workspace_id
 ),
 
--- Use credits consumed as a proxy for generation activity
--- Actual generation costs can be calculated from credits * cost_per_credit if needed
+-- Workspace metrics with actual costs from Costs table
 int_workspace_metrics AS (
     SELECT
         w.workspace_id,
@@ -363,15 +371,16 @@ int_workspace_metrics AS (
         COALESCE(va.total_videos_v1, 0) AS total_videos_v1,
         COALESCE(va.total_assets, 0) AS total_assets,
         COALESCE(va.total_videos_v1, 0) + COALESCE(va.total_assets, 0) AS total_generations,
-        -- Use credits consumed as proxy for cost (can multiply by avg cost per credit if known)
-        COALESCE(ca.total_credits_consumed, 0) * 0.01 AS total_generation_cost,
+        -- Actual generation costs from Costs table
+        COALESCE(costa.total_generation_cost, 0) AS total_generation_cost,
         CASE WHEN pa.total_revenue > 0 THEN true ELSE false END AS has_revenue,
         CASE WHEN ca.total_credits_consumed > 0 THEN true ELSE false END AS has_consumed_credits,
-        CASE WHEN ca.total_credits_consumed > 0 THEN true ELSE false END AS has_generated_content,
+        CASE WHEN ca.total_credits_consumed > 0 OR va.total_videos_v1 > 0 OR va.total_assets > 0 THEN true ELSE false END AS has_generated_content,
         COALESCE(pa.total_payments, 0) AS total_payments
     FROM stg_workspaces w
     LEFT JOIN payment_aggregations pa ON w.workspace_id = pa.workspace_id
     LEFT JOIN credit_aggregations ca ON w.workspace_id = ca.workspace_id
+    LEFT JOIN cost_aggregations costa ON w.workspace_id = costa.workspace_id
     LEFT JOIN video_aggregations va ON w.workspace_id = va.workspace_id
 ),
 
@@ -547,6 +556,7 @@ test_metrics AS (
 test_comparison AS (
     SELECT
         ab_test_name,
+        cohort,
         
         -- Conversion lift
         conversion_rate_percent - LAG(conversion_rate_percent) OVER (PARTITION BY ab_test_name ORDER BY cohort) AS conversion_lift_pct,
@@ -617,5 +627,5 @@ SELECT
     ROUND(tc.profit_lift_percent, 2) AS profit_lift_percent
     
 FROM test_metrics tm
-LEFT JOIN test_comparison tc ON tm.ab_test_name = tc.ab_test_name
+LEFT JOIN test_comparison tc ON tm.ab_test_name = tc.ab_test_name AND tm.cohort = tc.cohort
 ORDER BY tm.ab_test_name, tm.cohort

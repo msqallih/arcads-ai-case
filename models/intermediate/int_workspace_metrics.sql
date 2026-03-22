@@ -26,6 +26,10 @@ credits_events as (
     select * from {{ ref('stg_credits_consumption_events') }}
 ),
 
+costs as (
+    select * from {{ ref('stg_costs') }}
+),
+
 videos as (
     select * from {{ ref('stg_videos') }}
 ),
@@ -93,6 +97,15 @@ credit_aggregations as (
     group by workspace_id
 ),
 
+-- Aggregate actual generation costs from Costs table
+cost_aggregations as (
+    select
+        workspace_id,
+        sum(value) as total_generation_cost
+    from costs
+    group by workspace_id
+),
+
 -- Video and asset aggregations (joined through products)
 video_aggregations as (
     select
@@ -124,15 +137,16 @@ final as (
         coalesce(va.total_videos_v1, 0) as total_videos_v1,
         coalesce(va.total_assets, 0) as total_assets,
         coalesce(va.total_videos_v1, 0) + coalesce(va.total_assets, 0) as total_generations,
-        -- Use credits consumed as proxy for cost (can multiply by avg cost per credit if known)
-        coalesce(ca.total_credits_consumed, 0) * 0.01 as total_generation_cost,
+        -- Actual generation costs from Costs table
+        coalesce(costa.total_generation_cost, 0) as total_generation_cost,
         case when pa.total_revenue > 0 then true else false end as has_revenue,
         case when ca.total_credits_consumed > 0 then true else false end as has_consumed_credits,
-        case when ca.total_credits_consumed > 0 then true else false end as has_generated_content,
+        case when ca.total_credits_consumed > 0 or va.total_videos_v1 > 0 or va.total_assets > 0 then true else false end as has_generated_content,
         coalesce(pa.total_payments, 0) as total_payments
     from workspaces w
     left join payment_aggregations pa on w.workspace_id = pa.workspace_id
     left join credit_aggregations ca on w.workspace_id = ca.workspace_id
+    left join cost_aggregations costa on w.workspace_id = costa.workspace_id
     left join video_aggregations va on w.workspace_id = va.workspace_id
 )
 
